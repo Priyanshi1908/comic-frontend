@@ -4,68 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comic Book Image Generator</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        #images { display: flex; flex-wrap: wrap; gap: 20px; }
-        .image-container { max-width: 200px; text-align: center; }
-        img { max-width: 100%; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Comic Book Image Generator</h1>
-    <form id="apiForm">
-        <label for="openaiKey">OpenAI API Key:</label>
-        <input type="text" id="openaiKey" required><br><br>
-
-        <label for="togetherApiKey">Together AI API Key:</label>
-        <input type="text" id="togetherApiKey" required><br><br>
-
-        <label for="comicIdea">Comic Book Idea:</label>
-        <input type="text" id="comicIdea" required><br><br>
-
-        <button type="submit">Generate Images</button>
-    </form>
-
-    <div id="images"></div>
-
-    <script>
-        document.getElementById('apiForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const openaiKey = document.getElementById('openaiKey').value;
-            const togetherApiKey = document.getElementById('togetherApiKey').value;
-            const comicIdea = document.getElementById('comicIdea').value;
-
-            const response = await fetch('https://comic-backend.priyanshideshpande19.workers.dev/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ openaiKey, togetherApiKey, comicIdea })
-            });
-
-            if (!response.ok) {
-                alert('Error: ' + await response.text());
-                return;
-            }
-
-            const { images, texts } = await response.json();
-            const imagesDiv = document.getElementById('images');
-            imagesDiv.innerHTML = ''; // Clear previous images
-
-            images.forEach((base64Image, index) => {
-                const container = document.createElement('div');
-                container.className = 'image-container';
-
-                const img = document.createElement('img');
-                img.src = 'data:image/png;base64,' + base64Image;
-
-                const text = document.createElement('p');
-                text.textContent = texts[index];
-
-                container.appendChild(img);
-                container.appendChild(text);
-                imagesDiv.appendChild(container);
-            });
-        });
-    </script>
+    <div class="container">
+        <h1>Comic Book Image Generator</h1>
+        <div id="form-container" class="active">
+            <form id="apiForm">
+                <div class="form-step active" id="step1">
+                    <label for="openaiKey">OpenAI API Key:</label>
+                    <input type="password" id="openaiKey" required>
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+                <div class="form-step" id="step2">
+                    <label for="togetherApiKey">Together AI API Key:</label>
+                    <input type="password" id="togetherApiKey" required>
+                    <button type="button" class="prev-btn">Previous</button>
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+                <div class="form-step" id="step3">
+                    <label for="comicIdea">Comic Book Idea:</label>
+                    <textarea id="comicIdea" required></textarea>
+                    <button type="button" class="prev-btn">Previous</button>
+                    <button type="submit">Generate Comic</button>
+                </div>
+            </form>
+        </div>
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>Generating your comic book...</p>
+        </div>
+        <div id="comic-container" class="hidden">
+            <div id="comic-book"></div>
+            <div class="pagination">
+                <button id="prev-page" class="page-btn">&larr; Previous</button>
+                <button id="next-page" class="page-btn">Next &rarr;</button>
+            </div>
+            <div id="the-end" class="hidden">THE END</div>
+            <button id="regenerate-btn">Generate New Comic</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
+
