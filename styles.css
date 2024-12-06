@@ -68,6 +68,7 @@ textarea {
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 input[type="password"]:focus,
@@ -108,6 +109,10 @@ button:hover {
 #loading {
     text-align: center;
 }
+#loading p {
+    color: #e5e1e1; 
+}
+
 
 .spinner {
     border: 6px solid #f3f3f3;
@@ -201,9 +206,6 @@ button:hover {
     box-shadow: 0 5px 10px rgba(204, 120, 232, 0.624);
 }
 
-
-
-
 .pagination {
     display: flex;
     justify-content: space-between;
@@ -254,3 +256,78 @@ button:hover {
     100% { transform: scale(1); }
 }
 
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .comic-panel {
+        max-width: 90%;
+    }
+
+    .page-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+    }
+
+    #the-end {
+        font-size: 3.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    label {
+        font-size: 1rem;
+    }
+
+    input[type="password"],
+    textarea,
+    button {
+        font-size: 0.9rem;
+    }
+
+    .comic-panel {
+        max-width: 100%;
+        padding: 10px;
+    }
+
+    .comic-panel img {
+        border-width: 3px;
+    }
+
+    .comic-panel p {
+        font-size: 1rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    #regenerate-btn {
+        font-size: 1rem;
+        padding: 0.6rem 1.5rem;
+    }
+
+    #the-end {
+        font-size: 3rem;
+       
+
+    }
+}
