@@ -1,39 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comic Book Image Generator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://js.puter.com/v2/"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
         <h1>Comic Book Image Generator</h1>
         <div id="form-container" class="active">
             <form id="apiForm">
                 <div class="form-step active" id="step1">
-                    <label for="openaiKey">OpenAI API Key:</label>
-                    <input type="password" id="openaiKey" required>
-                    <button type="button" class="next-btn">Next</button>
-                </div>
-                <div class="form-step" id="step2">
-                    <label for="togetherApiKey">Together AI API Key:</label>
-                    <input type="password" id="togetherApiKey" required>
-                    <button type="button" class="prev-btn">Previous</button>
-                    <button type="button" class="next-btn">Next</button>
-                </div>
-                <div class="form-step" id="step3">
                     <label for="comicIdea">Comic Book Idea:</label>
-                    <textarea id="comicIdea" required></textarea>
-                    <button type="button" class="prev-btn">Previous</button>
+                    <textarea id="comicIdea"
+                        placeholder="Enter your comic idea here (e.g. A space cat exploring Mars)..."
+                        required></textarea>
                     <button type="submit">Generate Comic</button>
                 </div>
             </form>
         </div>
         <div id="loading" class="hidden">
-            <div class="spinner"></div>
-            <p>Generating your comic book. This task will take upto 3 minutes...</p>
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <p id="loading-status">Generating your comic book story...</p>
+            <p id="progress-text">0%</p>
         </div>
         <div id="comic-container" class="hidden">
             <div id="comic-book"></div>
@@ -47,5 +44,5 @@
     </div>
     <script src="script.js"></script>
 </body>
-</html>
 
+</html>

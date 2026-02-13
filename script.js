@@ -9,43 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPageBtn = document.getElementById('next-page');
     const theEndElement = document.getElementById('the-end');
 
-    const formSteps = document.querySelectorAll('.form-step');
-    const nextBtns = document.querySelectorAll('.next-btn');
-    const prevBtns = document.querySelectorAll('.prev-btn');
-
-    let currentStep = 0;
     let currentPage = 0;
     let comicPanels = [];
-
-    function showStep(step) {
-        formSteps.forEach((formStep, index) => {
-            if (index === step) {
-                formStep.classList.add('active');
-                setTimeout(() => {
-                    formStep.style.opacity = 1;
-                    formStep.style.transform = 'translateX(0)';
-                }, 50);
-            } else {
-                formStep.classList.remove('active');
-                formStep.style.opacity = 0;
-                formStep.style.transform = 'translateX(50px)';
-            }
-        });
-    }
-
-    nextBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentStep++;
-            showStep(currentStep);
-        });
-    });
-
-    prevBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentStep--;
-            showStep(currentStep);
-        });
-    });
 
     function showComicPanel(index) {
         if (index >= 0 && index < comicPanels.length) {
@@ -70,57 +35,109 @@ document.addEventListener('DOMContentLoaded', () => {
         showComicPanel(currentPage + 1);
     });
 
-    form.addEventListener('submit', async function(event) {
+    form.addEventListener('submit', async function (event) {
         event.preventDefault();
 
-        const openaiKey = document.getElementById('openaiKey').value;
-        const togetherApiKey = document.getElementById('togetherApiKey').value;
         const comicIdea = document.getElementById('comicIdea').value;
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const loadingStatus = document.getElementById('loading-status');
 
         formContainer.classList.add('hidden');
         loadingContainer.classList.remove('hidden');
 
+        // Reset progress
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
+
         try {
-            const response = await fetch('https://comic-backend.priyanshideshpande19.workers.dev/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ openaiKey, togetherApiKey, comicIdea })
-            });
+            loadingStatus.textContent = "Crafting your story...";
+            // 1. Generate Narrative using Puter.js
+            // Safety: Explicitly asking for safe, all-ages content to avoid model rejections
+            const systemPrompt = "You are a creative assistant generating a safe, all-ages comic book story. Create a story with 8 scenes. For each scene, provide a vivid image prompt that explicitly states 'comic book style art'. AVOID violence, blood, or copyrighted characters (like Batman). Use generic descriptions instead (e.g., 'a caped hero'). Format each scene EXACTLY as follows:\n\nImage Prompt: [Description]\nStory Text: [Text]\n\nDo not include any other text.";
 
-            if (!response.ok) {
-                throw new Error(await response.text());
+            const chatResponse = await puter.ai.chat(
+                `${systemPrompt}\n\nCreate an 8-scene story about: ${comicIdea}`,
+                { model: 'gpt-4o-mini' }
+            );
+
+            const fullText = (chatResponse.message && chatResponse.message.content)
+                ? chatResponse.message.content
+                : chatResponse.toString();
+
+            console.log("Chat Response Received:", fullText);
+
+            const lines = fullText.split('\n').filter(line => line.trim().length > 0);
+
+            const prompts = [];
+            const texts = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.toLowerCase().startsWith("image prompt:")) {
+                    prompts.push(line.replace(/image prompt:/i, "").trim());
+                } else if (line.toLowerCase().startsWith("story text:")) {
+                    texts.push(line.replace(/story text:/i, "").trim());
+                }
             }
 
-            const { images, texts } = await response.json();
-            console.log('Images:', images);
-            console.log('Texts:', texts);
+            if (prompts.length === 0) throw new Error("Failed to parse comic prompts. Please try a different idea.");
 
-            if (images.length === 0 || texts.length === 0) {
-                throw new Error('No images or texts received.');
+            // 2. Generate Images using Puter.js
+            const images = [];
+            const panelsToGenerate = Math.min(prompts.length, 8); // Explicit 8 page limit
+
+            for (let i = 0; i < panelsToGenerate; i++) {
+                const progress = Math.round(((i) / panelsToGenerate) * 100);
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                loadingStatus.textContent = `Drawing panel ${i + 1} of ${panelsToGenerate}...`;
+
+                try {
+                    const imgResult = await puter.ai.txt2img(`${prompts[i]}, comic book style art, clean lines, vibrant`, {
+                        model: 'dall-e-3',
+                        provider: 'openai-image-generation'
+                    });
+
+                    const imgSrc = imgResult.src || imgResult;
+                    images.push(imgSrc);
+                } catch (imgError) {
+                    console.error(`Failed to generate image ${i + 1}:`, imgError);
+                    // Use a placeholder if safety system rejects it, so the whole comic doesn't fail
+                    images.push('https://via.placeholder.com/1024x1024.png?text=Image+Safety+Restricted');
+                }
             }
 
-            comicPanels = images.map((base64Image, index) => {
+            // Final progress update
+            progressBar.style.width = `100%`;
+            progressText.textContent = `100%`;
+            loadingStatus.textContent = "Assembling the book...";
+
+            comicPanels = images.map((imgSrc, index) => {
                 const panel = document.createElement('div');
                 panel.className = 'comic-panel';
 
                 const img = document.createElement('img');
-                img.src = 'data:image/png;base64,' + base64Image;
+                img.src = (typeof imgSrc === 'string') ? imgSrc : imgSrc.src;
                 img.alt = `Comic panel ${index + 1}`;
 
                 const text = document.createElement('p');
-                text.textContent = texts[index];
+                text.textContent = texts[index] || "...";
 
                 panel.appendChild(img);
                 panel.appendChild(text);
                 return panel;
             });
 
-            showComicPanel(0);
-            loadingContainer.classList.add('hidden');
-            comicContainer.classList.remove('hidden');
+            setTimeout(() => {
+                showComicPanel(0);
+                loadingContainer.classList.add('hidden');
+                comicContainer.classList.remove('hidden');
+            }, 500);
+
         } catch (error) {
-            console.error('Error:', error);
-            alert('Error: ' + error.message);
+            console.error('Final Error Catch:', error);
+            alert('Error generating comic: ' + error.message);
             loadingContainer.classList.add('hidden');
             formContainer.classList.remove('hidden');
         }
@@ -129,8 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
     regenerateBtn.addEventListener('click', () => {
         comicContainer.classList.add('hidden');
         formContainer.classList.remove('hidden');
-        currentStep = 0;
-        showStep(currentStep);
         comicPanels = [];
         theEndElement.classList.add('hidden');
     });
